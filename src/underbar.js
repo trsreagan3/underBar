@@ -1,6 +1,6 @@
 (function() {
   'use strict';
-
+//add a note for pull request
   window._ = {};
 
   // Returns whatever value is passed as the argument. This function doesn't

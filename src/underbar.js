@@ -53,6 +53,9 @@
   //
   // Note: _.each does not have a return value, but rather simply runs the
   // iterator function over each item in the input collection.
+
+  //////////////////initial each
+  /*
   _.each = function(collection, iterator) {
     
     if(Array.isArray(collection)){
@@ -72,6 +75,26 @@
     }
     
   }
+  */
+  ///////////////////end of initial each
+  //////////////////begin refactored each
+ _.each = function(collection, iterator) {
+    if (collection.constructor === Array) {
+      for (var i = 0; i < collection.length; i++) {
+        var index = i;
+        iterator(collection[i], index, collection);
+      }
+    }
+    if (collection.constructor === Object) {
+      for (var key in collection) {
+        iterator(collection[key], key, collection);
+      }
+    }
+  }
+
+
+
+  ///////////////////end refactored each
   // Returns the index at which value can be found in the array, or -1 if value
   // is not present in the array.
   _.indexOf = function(array, target){
@@ -246,26 +269,129 @@ _.uniq = function (array) {
 
 
   // Determine whether all of the elements match a truth test.
-  _.every = function(collection, iterator) {
-    // TIP: Try re-using reduce() here.
-    ////scenario for all true///
-    var newArray=[];
-    _.reduce(collection, function (item){
-      if (iterator(item)){
-        newArray.push(item)
-      }
-    })
-      if (newArray.length==collection.length){return true}
-      else {return false}
+  // _.every = function(collection, iterator) {
+  //   // TIP: Try re-using reduce() here.
+  //   ////scenario for all true///
+  //   var newArray=[];
+  //   _.reduce(collection, function (item){
+  //     if (iterator(item)!==false){
+  //       newArray.push(item)
+  //     }
+  //   })
+  //     if (newArray.length==collection.length){return true}
+  //     else {return false}
         
-  };
+  // };
+//  _.every = function(collection, iterator) {
+//       if (arguments.length==1){
+//         var counter=0;
+//         for (var i = 0; i<collection.length;i++)  {
+//           if (collection[i]==false){
+//             return false
+//           } else if (collection[i]){
+//             counter++
+//           } if (counter==collection.length-1){
+//               return true
+//           }
+//         }
+        
+//       }
+//       else {
+//     return _.reduce(collection, function(allFound, item) {
+//         return !!iterator(item) && allFound;
+//       }, true);
+//     }
+// }
+ _.every = function(collection, iterator) { 
+
+  if (iterator==undefined){
+    return (!(_.contains(collection, false)))
+  }
+  
+  else {
+      return _.reduce(collection, function(allFound, item) {
+         return !!iterator(item) && allFound;
+       }, true);
+  }
+
+}
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
-  _.some = function(collection, iterator) {
+  //_.some = function(collection, iterator) {
     // TIP: There's a very clever way to re-use every() here.
-  };
+    ///////////////////////////attempt1
+    // var newArray=[]
+    // var allArrayTrue=false;
+    // var allArrayFalse=false;
 
+    // if (_.every(collection, true)==true){
+    //       allArrayTrue=true;
+    //     }
+    
+    // if (_.every(collection, false)==true){
+    //       allArrayFalse=false;
+    //     }
+
+    // if (iterator===undefined){
+    //   iterator = function (item, index,list){
+    //     _.each(collection, function (){
+    //       return (collection) 
+    //     })
+    //   }
+    // } 
+    //  if (iterator==undefined){
+
+    //   iterator=  
+    // else if(_.every(collection, false)){
+    //       allArrayFalse=true;
+    //     })
+    //     }
+    //     return (!(_.every(collection, false)))
+    //   }
+
+      
+    //  if(iterator!==undefined) {
+    //     _.each(collection, function (item){
+    //         if (iterator(item)!=false){
+    //           newArray.push(true)
+    //         }
+    //         else {newArray.push(false)}
+    //     })
+    //   }
+
+    //   if (_.contains(newArray, true)){
+    //         return true
+    //   }
+    //   else {return false}
+    //   }
+
+//////////////////////////////////////////////////end of attempt 1
+/////////////////////////////
+//////////////////////////////some attempt1
+/*
+_.some=function(collection, theTest, context) {
+    theTest = cb(theTest, context);
+    var keys = !isArrayLike(collection) && _.keys(collection),
+        length = (keys || collection).length;
+    for (var index = 0; index < length; index++) {
+      var currentKey = keys ? keys[index] : index;
+      if (theTest(collection[currentKey], currentKey, collection)) return true;
+    }
+    return false;
+  };
+*/
+////////////////////////////////end some attempt1
+  _.some= function(collection, iterator) {
+    // TIP: There's a very clever way to re-use every() here.
+    //create a default value for the iterator
+    iterator = (iterator || _.identity)
+
+    return !!_.reduce(collection, function(test, item) {
+      return test || iterator(item);
+    }, false);
+  };
+/////////////////////
 
   /**
    * OBJECTS
@@ -285,13 +411,28 @@ _.uniq = function (array) {
   //   }, {
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
-  _.extend = function(obj) {
-  };
+_.extend = function(collection) {
+    _.each(arguments, function(arg) {
+      _.each(arg, function(value, key) {
+        collection[key]=value;
+      })
+    })
+    return collection;
+  }
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
-  _.defaults = function(obj) {
+   _.defaults = function(collection) {
+    _.each(arguments, function(arg) {
+      _.each(arg, function(value, key) {
+        if (collection[key]===undefined) {
+          collection[key]=value;
+        }
+      })
+    })
+    return collection;
   };
+
 
 
   /**
@@ -333,8 +474,19 @@ _.uniq = function (array) {
   // _.memoize should return a function that, when called, will check if it has
   // already computed the result for the given argument and return that value
   // instead if possible.
-  _.memoize = function(func) {
-  };
+  _.memoize = function(x) {
+    var holder = {};
+      
+      return function() {
+      var arg = JSON.stringify(arguments);
+      
+      if (!holder[arg]) {
+        holder[arg] = x.apply(this, arguments);
+        }
+
+        return holder[arg];
+      }
+  }
 
   // Delays a function for the given number of milliseconds, and then calls
   // it with the arguments supplied.
@@ -342,8 +494,15 @@ _.uniq = function (array) {
   // The arguments for the original function are passed after the wait
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
-  _.delay = function(func, wait) {
-  };
+  _.delay= function(item, time) {
+    
+    var piece = Array.prototype.slice.call(arguments, 2);
+    
+    setTimeout(function() {
+      item.apply(this, piece);
+    }, time);
+  
+  }
 
 
   /**
@@ -356,7 +515,28 @@ _.uniq = function (array) {
   // TIP: This function's test suite will ask that you not modify the original
   // input array. For a tip on how to make a copy of an array, see:
   // http://mdn.io/Array.prototype.slice
-  _.shuffle = function(array) {
+ _.shuffle = function(array) {
+    //var shuffled = [];
+    var arrayCopy = Array.prototype.slice.call(array);
+
+    var newArray = [];
+
+    /////////////initial for loop begin
+    // for (var i = 0; i < array.length; i++) {
+    //   var random = Math.floor(Math.random() * arrayCopy.length);
+    //   newArray.push(arrayCopy[random]);
+    //   arrayCopy.splice(random,1);
+    // }
+    /////////////////////////initial for loop end
+      for (var i = 0; i < array.length; i++) {
+      
+      var random = Math.floor(Math.random() * arrayCopy.length);
+      
+        newArray.push(arrayCopy[random]);
+        arrayCopy.splice(random,1);
+    }
+
+    return newArray;
   };
 
 
